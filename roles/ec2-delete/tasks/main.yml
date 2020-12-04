@@ -1,0 +1,45 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+- name: Set python interpreter fact
+  set_fact:
+    ansible_python_interpreter: "{{ local_python_interpreter | default('/usr/bin/python3') }}"
+  when:
+    - local_python_interpreter is defined
+
+- name: Gather information about rtmpServer instances
+  community.aws.ec2_instance_info:
+    region: "{{ ec2_region }}"
+    filters:
+      "tag:Name": rtmpServer
+  register: ec2_data
+  failed_when: false
+
+- name: Print debug data
+  debug:
+    var: ec2_data
+  when:
+    - not (ec2_data.instances is defined)
+
+- name: Terminate rtmpServer instances
+  amazon.aws.ec2:
+    region: "{{ ec2_region }}"
+    state: absent
+    instance_ids: "{{ ec2_data.instances | map(attribute='instance_id') | list }}"
+  when:
+    - ec2_data.instances is defined
+    - (ec2_data.instances | length) > 0

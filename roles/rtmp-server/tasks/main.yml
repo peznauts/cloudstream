@@ -1,0 +1,70 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+- name: Install required packages
+  become: true
+  package:
+    name: "{{ rtmpServer_packages }}"
+    update_cache: true
+  retries: 3
+  delay: 3
+  register: install
+  until: install is success
+
+- name: Create stunnel config
+  become: true
+  notify:
+    - Restart stunnel
+  copy:
+    src: stunnel-fb-live.conf
+    dest: /etc/stunnel/stunnel.conf
+
+- name: Create rtmp config
+  become: true
+  notify:
+    - Restart nginx
+  blockinfile:
+    path: /etc/nginx/nginx.conf
+    block: |
+      rtmp {
+        server {
+          listen 1935;
+          chunk_size 4096;
+          out_queue 4096;
+          out_cork 8;
+      {% for item in rtmpEndpoints %}
+          application {{ loop.index }} {
+                  live on;
+                  record off;
+                  meta copy;
+      {% if item.url.find('v=' ~ 'facebook') == -1 %}
+                  push rtmp://127.0.0.1:19350/rtmp/{{ item.key }};
+      {% else %}
+                  push {{ item.url | regex_replace('\\/$', '') }}/{{ item.key }};
+      {% endif %}
+          }
+      {% endfor %}
+          application simulcast {
+                  live on;
+                  record off;
+                  meta copy;
+      {% for item in rtmpEndpoints %}
+                  push rtmp://127.0.0.1:1935/{{ loop.index }};
+      {% endfor %}
+          }
+        }
+      }

@@ -1,5 +1,17 @@
 # cloudstream
-Tools for setting up a simulcast broadcast using public cloud resources
+
+Tools for setting up a simulcast broadcast using public cloud resources. This
+project will support simulcasting streams to services like Perascope, Facebook,
+Twitch, YouTube, and more.
+
+## Install
+
+This project is an Ansible collection and be easily installed using the
+`ansible-galaxy` command line utility.
+
+``` shell
+ansible-galaxy collection install git+https://github.com/peznauts/cloudstream.git
+```
 
 ## Setup
 
@@ -8,11 +20,12 @@ playbooks comes from package installed Ansible or via a version controlled
 virtual environment.
 
 In order to add stream relay endpoints, create a file named `stream-vars.yaml`
-in the provided **private-vars** directory. In this file you can add you
-private credentials and stream data.
+in either the provided directory in this repo, **private-vars**, or in a secure
+location on your local file system. In this file you can add you private
+credentials and stream data.
 
 * The option `rtmpEndpoints` is a list and used to add relay endpoints. Every
-endpoint within this relay scheme will be part of the simulcast.
+  endpoint within this relay scheme will be part of the simulcast.
 
 > The following is an example of what the `stream-vars.yaml` could look like.
 
@@ -24,7 +37,7 @@ rtmpEndpoints:
 ```
 
 
-## EC2 Create Usage
+### EC2 Create Usage
 
 The following create playbook will build an EC2 instance and all associate
 services to facilitate a streaming connection.
@@ -33,18 +46,27 @@ services to facilitate a streaming connection.
 running ansible from within a virtual environment.
 
 ``` shell
-$ ansible-playbook -i localhost, -e local_python_interpreter=$(which python) ec2-create.yaml
+$ ansible-playbook -i localhost, \
+                   -e local_python_interpreter=$(which python) \
+                   -e @private-vars/stream-vars.yaml \  # This is the file which contains the rtmpEndpoints array
+                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/ec2-create.yaml
 ```
+
+> NOTE: The above command shows how to include a private variable file which
+  contains all of the "secret" options required to configure your server.
 
 At the end of the playbook execution the RTMP URL used in your broadcasting
 software will be presented as debug output. This is the URL used to simulcast
 your broadcast.
 
-## EC2 Delete Usage
+
+### EC2 Delete Usage
 
 The following delete playbook will destroy an EC2 instance and all associate
 services for streaming.
 
 ``` shell
-$ ansible-playbook -i localhost, -e local_python_interpreter=$(which python) ec2-delete.yaml
+$ ansible-playbook -i localhost, \
+                   -e local_python_interpreter=$(which python) \
+                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/ec2-delete.yaml
 ```

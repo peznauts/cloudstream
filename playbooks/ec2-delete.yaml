@@ -20,27 +20,13 @@
   gather_facts: true
   connection: local
 
-- name: Create an rtmpServer
+- name: Destroy an rtmpServer
   hosts: localhost
   gather_facts: false
   connection: local
-  vars_files:
-    - vars/ec2-vars.yaml
-  tasks:
-    - name: Set python interpreter fact
-      set_fact:
-        ansible_python_interpreter: "{{ local_python_interpreter | default('/usr/bin/python3') }}"
-
-    - name: Gather information about rtmpServer instances
-      ec2_instance_info:
-        region: "{{ ec2_region }}"
-        filters:
-          "tag:Name": rtmpServer
-      register: ec2
-      failed_when: false
-
-    - name: Terminate rtmpServer instances
-      amazon.aws.ec2:
-        region: "{{ ec2_region }}"
-        state: absent
-        instance_ids: "{{ ec2.instances | map(attribute='instance_id') | list }}"
+  collections:
+    - peznauts.cloudstream
+    - amazon.aws
+    - community.aws
+  roles:
+    - role: ec2-delete
