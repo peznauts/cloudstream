@@ -1,4 +1,4 @@
-# cloudstream
+# CloudStream
 
 Tools for setting up a simulcast broadcast using public cloud resources. This
 project will support simulcasting streams to services like Perascope, Facebook,
@@ -12,6 +12,13 @@ This project is an Ansible collection and be easily installed using the
 ``` shell
 ansible-galaxy collection install git+https://github.com/peznauts/cloudstream.git
 ```
+
+### Installation
+
+Installation of this collection requires Ansible. Several scripts have been
+created in the included "scripts" directory which can assist with the execution
+and installation process. Please review the README.md file within the scripts
+directory for more information on their uses.
 
 ## Setup
 
@@ -36,6 +43,27 @@ rtmpEndpoints:
   key: SuperSecreteKey
 ```
 
+### Extra configuration
+
+Most cloud providers require some additional setup to interact within their 
+APIs. This section covers the supported cloud providers and where to find the 
+documentation nessisary to setup the additional configurations.
+
+#### EC2
+
+To interact with the Amazon AWS Cloud you will need to setup some basic
+credential files. The basic libray name is called Boto and the documentation
+can be found [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration).
+
+> On Windows using the WSL you will need to execute CMD and `bash` to access
+  the WSL environment. All credentials will need to be created within the
+  home folder of the user. To rapidly get to the home folder simple execute
+  `cd ~/` from within the WSL shell. 
+
+## Usage
+
+This section covers general use cases executing the included playbook from 
+this collection.
 
 ### EC2 Create Usage
 
