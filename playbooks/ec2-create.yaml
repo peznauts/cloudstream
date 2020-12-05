@@ -38,4 +38,4 @@
       debug:
         msg: >-
           This is the new stream URL:
-          rtmp://{{ hostvars[groups['streamerTarget'][0]]['ansible_host'] }}:1935
+          rtmp://{{ hostvars[groups['streamerTarget'][0]]['ansible_host'] }}:1935/simulcast

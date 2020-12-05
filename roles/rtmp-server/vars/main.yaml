@@ -1,0 +1,55 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+rtmpServer_ffmpeg_settings:
+  720p:
+    res: 1280x720
+    fps: 30
+    audio: 128k
+    key_frames: 3
+    bitrate: 4000
+  1080p48:
+    res: 1920x1080
+    fps: 48
+    audio: 160k
+    key_frames: 2
+    bitrate: 6000
+  1080p60:
+    res: 1920x1080
+    fps: 60
+    audio: 160k
+    key_frames: 2
+    bitrate: 6000
+
+_bitrate: "{{ rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['bitrate'] }}"
+_keyinit: "{{ (rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['fps'] | int) * 2 }}"
+_keyframes: "{{ (rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['key_frames'] }}"
+rtmpServer_ffmpeg_encoder: >-
+  /bin/ffmpeg
+  -i "rtmp://127.0.0.1:1935/simulcast"
+  -s {{ rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['res'] }}
+  -r {{ rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['fps'] }}
+  -c:v libx264
+  -preset fast
+  -profile:v high
+  -g {{ _keyinit }}
+  -x264-params "bitrate={{ _bitrate }}:vbv_maxrate={{ _bitrate }}:vbv_bufsize={{ _bitrate }}:threads=0:bframes={{ _keyframes }}:rc_lookahead=10:keyint={{ _keyinit }}:keyint_min={{ _keyinit }}:nal_hrd=cbr:scenecut=0:rc=cbr:force_cfr=1"
+  -sws_flags lanczos
+  -pix_fmt yuv420p
+  -c:a copy
+  -b:a {{ rtmpServer_ffmpeg_settings[rtmpServer_ffmpeg_default]['audio'] }}
+  -f flv

@@ -51,7 +51,7 @@
                   live on;
                   record off;
                   meta copy;
-      {% if item.url.find('v=' ~ 'facebook') == -1 %}
+      {% if item.url is search('facebook') %}
                   push rtmp://127.0.0.1:19350/rtmp/{{ item.key }};
       {% else %}
                   push {{ item.url | regex_replace('\\/$', '') }}/{{ item.key }};
@@ -63,7 +63,11 @@
                   record off;
                   meta copy;
       {% for item in rtmpEndpoints %}
+      {%   if item.url is search('pscp') %}
+                  exec {{ rtmpServer_ffmpeg_encoder }} "rtmp://127.0.0.1:1935/{{ loop.index }}";
+      {%   else %}
                   push rtmp://127.0.0.1:1935/{{ loop.index }};
+      {%   endif %}
       {% endfor %}
           }
         }

@@ -21,8 +21,13 @@
 #  key: <String>
 rtmpEndpoints: []
 
+# This is a conservative default used when transcoding. This setting can
+# be chaged using the provided options found in the vars/main.yaml file.
+rtmpServer_ffmpeg_default: 720p
+
 rtmpServer_packages:
-  - nginx
-  - libnginx-mod-rtmp
-  - stunnel
+  - ffmpeg
   - iptraf-ng
+  - libnginx-mod-rtmp
+  - nginx
+  - stunnel
