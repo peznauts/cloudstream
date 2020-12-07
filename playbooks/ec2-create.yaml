@@ -25,17 +25,4 @@
   roles:
     - role: ec2-create
 
-
-- name: Configure the rtmp server
-  hosts: streamerTarget
-  gather_facts: true
-  collections:
-    - peznauts.cloudstream
-  roles:
-    - role: rtmp-server
-  post_tasks:
-    - name: Print Stream URL
-      debug:
-        msg: >-
-          This is the new stream URL:
-          rtmp://{{ hostvars[groups['streamerTarget'][0]]['ansible_host'] }}:1935/simulcast
+- import_playbook: rtmp-server-setup.yaml

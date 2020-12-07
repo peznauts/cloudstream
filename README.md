@@ -41,12 +41,15 @@ credentials and stream data.
 rtmpEndpoints:
 - url: rtmp://endpoint-url.super.streaming.thingame
   key: SuperSecreteKey
+- url: rtmp://endpoint-url.super.streaming2.thingame
+  key: SuperSecreteKey2
+  transcode: 720p30
 ```
 
 ### Extra configuration
 
-Most cloud providers require some additional setup to interact within their 
-APIs. This section covers the supported cloud providers and where to find the 
+Most cloud providers require some additional setup to interact within their
+APIs. This section covers the supported cloud providers and where to find the
 documentation nessisary to setup the additional configurations.
 
 #### EC2
@@ -58,11 +61,11 @@ can be found [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guid
 > On Windows using the WSL you will need to execute CMD and `bash` to access
   the WSL environment. All credentials will need to be created within the
   home folder of the user. To rapidly get to the home folder simple execute
-  `cd ~/` from within the WSL shell. 
+  `cd ~/` from within the WSL shell.
 
 ## Usage
 
-This section covers general use cases executing the included playbook from 
+This section covers general use cases executing the included playbook from
 this collection.
 
 ### EC2 Create Usage

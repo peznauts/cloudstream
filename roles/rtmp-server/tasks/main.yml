@@ -63,8 +63,8 @@
                   record off;
                   meta copy;
       {% for item in rtmpEndpoints %}
-      {%   if item.url is search('pscp') %}
-                  exec {{ rtmpServer_ffmpeg_encoder }} "rtmp://127.0.0.1:1935/{{ loop.index }}";
+      {%   if item.transcode is defined %}
+                  exec {{ (rtmpServer_ffmpeg_settings[item.transcode] | peznauts.cloudstream.transcode) }} "rtmp://127.0.0.1:1935/{{ loop.index }}";
       {%   else %}
                   push rtmp://127.0.0.1:1935/{{ loop.index }};
       {%   endif %}

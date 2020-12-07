@@ -16,14 +16,16 @@
 ---
 
 # The items in the rtmpEndpoints array are a dictionaries (hashes).
+#
 # Each item must contain two elements:
-#  url: <String>
-#  key: <String>
+#  url: <String>  RTMP URL
+#  key: <String>  STREAM Key, set to an empty string if there's no key
+#  transcode: <String>  Transcode option ['720p30', '720p60', '1080p48', '1080p60']
+#
+# While this role ships with several options to transcode, user defined
+# options can be set using the `rtmpServer_ffmpeg_settings` option, which
+# is defined in "vars/main.yaml" within this role.
 rtmpEndpoints: []
-
-# This is a conservative default used when transcoding. This setting can
-# be chaged using the provided options found in the vars/main.yaml file.
-rtmpServer_ffmpeg_default: 720p
 
 rtmpServer_packages:
   - ffmpeg
