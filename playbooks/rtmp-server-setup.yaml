@@ -21,7 +21,7 @@
   collections:
     - peznauts.cloudstream
   roles:
-    - role: rtmp-server
+    - role: rtmp_server
   post_tasks:
     - name: Print Stream URL
       debug:

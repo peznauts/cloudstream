@@ -26,7 +26,6 @@
   connection: local
   collections:
     - peznauts.cloudstream
-    - amazon.aws
-    - community.aws
+    - community.digitalocean
   roles:
-    - role: ec2_delete
+    - role: droplet_delete

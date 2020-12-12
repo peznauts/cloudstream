@@ -15,18 +15,19 @@
 
 ---
 
-- name: Gather facts
-  hosts: localhost
-  gather_facts: true
-  connection: local
+- name: Set python interpreter fact
+  set_fact:
+    ansible_python_interpreter: "{{ local_python_interpreter | default('/usr/bin/python3') }}"
+  when:
+    - local_python_interpreter is defined
 
-- name: Destroy an rtmpServer
-  hosts: localhost
-  gather_facts: false
-  connection: local
-  collections:
-    - peznauts.cloudstream
-    - amazon.aws
-    - community.aws
-  roles:
-    - role: ec2_delete
+- name: Destroy rtmpServer droplet
+  community.digitalocean.digital_ocean_droplet:
+    state: absent
+    name: rtmpServer
+    unique_name: true
+    size:  "{{ droplet_instance_type }}"
+    region: "{{ droplet_region }}"
+    image: "{{ droplet_image }}"
+    wait_timeout: 600
+  register: my_droplet

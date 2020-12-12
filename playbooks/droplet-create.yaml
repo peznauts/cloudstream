@@ -15,18 +15,14 @@
 
 ---
 
-- name: Gather facts
+- name: Create an rtmpServer
   hosts: localhost
   gather_facts: true
-  connection: local
-
-- name: Destroy an rtmpServer
-  hosts: localhost
-  gather_facts: false
   connection: local
   collections:
     - peznauts.cloudstream
     - amazon.aws
-    - community.aws
   roles:
-    - role: ec2_delete
+    - role: droplet_create
+
+- import_playbook: rtmp-server-setup.yaml

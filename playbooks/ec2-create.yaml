@@ -23,6 +23,6 @@
     - peznauts.cloudstream
     - amazon.aws
   roles:
-    - role: ec2-create
+    - role: ec2_create
 
 - import_playbook: rtmp-server-setup.yaml

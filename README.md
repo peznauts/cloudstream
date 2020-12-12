@@ -63,18 +63,37 @@ can be found [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guid
   home folder of the user. To rapidly get to the home folder simple execute
   `cd ~/` from within the WSL shell.
 
+#### Digital Ocean
+
+Using the Digital Ocean requires you to setup an API OAuth token with both
+read and write access. The generated token will need to be saved in the
+`~/.ansible/digital-ocean.rc` file location. This file is used by the scripts
+to allow for built-in streamdeck integration. The file contents are simple
+bash environment variables, which the Digital Ocean modules will use for
+authentication.
+
+* Example
+
+``` shell
+export DO_API_KEY=XXXyyyZZZ
+```
+
 ## Usage
 
 This section covers general use cases executing the included playbook from
 this collection.
 
+> NOTE: The `local_python_interpreter` extra variable is only required when
+running ansible from within a virtual environment.
+
+At the end of the create playbook execution the RTMP URL used in your
+broadcasting software will be presented as debug output. This is the URL
+used to simulcast your broadcast.
+
 ### EC2 Create Usage
 
 The following create playbook will build an EC2 instance and all associate
 services to facilitate a streaming connection.
-
-> NOTE: The `local_python_interpreter` extra variable is only required when
-running ansible from within a virtual environment.
 
 ``` shell
 $ ansible-playbook -i localhost, \
@@ -82,14 +101,6 @@ $ ansible-playbook -i localhost, \
                    -e @private-vars/stream-vars.yaml \  # This is the file which contains the rtmpEndpoints array
                    ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/ec2-create.yaml
 ```
-
-> NOTE: The above command shows how to include a private variable file which
-  contains all of the "secret" options required to configure your server.
-
-At the end of the playbook execution the RTMP URL used in your broadcasting
-software will be presented as debug output. This is the URL used to simulcast
-your broadcast.
-
 
 ### EC2 Delete Usage
 
@@ -100,4 +111,27 @@ services for streaming.
 $ ansible-playbook -i localhost, \
                    -e local_python_interpreter=$(which python) \
                    ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/ec2-delete.yaml
+```
+
+### Digital Ocean Usage
+
+The following create playbook will build an EC2 instance and all associate
+services to facilitate a streaming connection.
+
+``` shell
+$ ansible-playbook -i localhost, \
+                   -e local_python_interpreter=$(which python) \
+                   -e @private-vars/stream-vars.yaml \  # This is the file which contains the rtmpEndpoints array
+                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/droplet-create.yaml
+```
+
+> NOTE: The above command shows how to include a private variable file which
+  contains all of the "secret" options required to configure your server.
+
+### Digital Ocean Delete
+
+``` shell
+$ ansible-playbook -i localhost, \
+                   -e local_python_interpreter=$(which python) \
+                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/droplet-delete.yaml
 ```
