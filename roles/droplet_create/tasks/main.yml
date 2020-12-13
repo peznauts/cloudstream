@@ -57,7 +57,6 @@
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
     ansible_user: root
     ansible_python_interpreter: /usr/bin/python3
-    rtmpserver_transcode: "{{ hostvars[item]['transcode'] | bool }}"
     rtmpserver_public_ip: "{{ hostvars[item]['droplet_facts']['data']['ip_address'] }}"
     rtmpserver_private_ip: "{{ hostvars[item]['droplet_facts']['data']['private_ipv4_address'] }}"
     groups:

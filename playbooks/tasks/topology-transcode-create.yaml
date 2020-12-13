@@ -15,20 +15,17 @@
 
 ---
 
-- name: Generate topology map
-  hosts: localhost
-  gather_facts: true
-  connection: local
-  tasks:
-    - name: Create main node
-      add_host:
-        hostname: main
-        ansible_host: "main"
-        ansible_connection: local
-        transcode: false
-        groups:
-        - topologyMap
-
-    - name: Create transcode node
-      include_tasks: tasks/topology-transcode-create.yaml
-      loop: "{{ rtmpEndpoints | default([]) }}"
+- name: Create transcode node
+  add_host:
+    hostname: "{{ item.url | to_uuid }}"
+    ansible_host: "{{ item.url | to_uuid }}"
+    ansible_connection: local
+    transcode: true
+    transcode_option: "{{ item.transcode }}"
+    groups:
+    - topologyMap
+    - transcodeTopologyMap
+    - transcodeTopologyMap{{ item.transcode }}
+  when:
+    - item.transcode is defined
+    - (groups['transcodeTopologyMap' ~ item.transcode] | default([]) | length) < 1

@@ -129,7 +129,6 @@
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
     ansible_user: ubuntu
     ansible_python_interpreter: /usr/bin/python3
-    rtmpserver_transcode: "{{ item.tags.Transcoder | bool }}"
     rtmpserver_public_ip: "{{ item.public_ip_address }}"
     rtmpserver_private_ip: "{{ item.private_ip_address }}"
     groups:

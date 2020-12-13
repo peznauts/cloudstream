@@ -23,6 +23,7 @@ rtmpServer_ffmpeg_settings:
     key_frames: 3
     bitrate: 4000
     preset: superfast
+    nodes: "{{ groups['transcodeTopologyMap720p30'] | default([]) | list }}"
   720p60:
     res: 1280x720
     fps: 60
@@ -30,6 +31,7 @@ rtmpServer_ffmpeg_settings:
     key_frames: 2
     bitrate: 5000
     preset: veryfast
+    nodes: "{{ groups['transcodeTopologyMap720p60'] | default([]) | list }}"
   1080p48:
     res: 1920x1080
     fps: 48
@@ -37,6 +39,7 @@ rtmpServer_ffmpeg_settings:
     key_frames: 2
     bitrate: 5500
     preset: veryfast
+    nodes: "{{ groups['transcodeTopologyMap1080p48'] | default([]) | list }}"
   1080p60:
     res: 1920x1080
     fps: 60
@@ -44,3 +47,4 @@ rtmpServer_ffmpeg_settings:
     key_frames: 2
     bitrate: 6000
     preset: veryfast
+    nodes: "{{ groups['transcodeTopologyMap1080p60'] | default([]) | list }}"
