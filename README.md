@@ -4,6 +4,16 @@ Tools for setting up a simulcast broadcast using public cloud resources. This
 project will support simulcasting streams to services like Perascope, Facebook,
 Twitch, YouTube, and more.
 
+## Transcoding
+
+CloudStream will detect your configuration and adapt the cloud environment to
+meet the needs of your broadcast by splitting off transcoding nodes from the
+main relay node. CloudStream allows you to scale your broadcast horizontally
+whenever required, which has the added benefit of fencing. By scalling
+horizontally, and fencing your broadcast, you'll never need to worry about
+one stream negatively impacting another, especially when transcoding is
+required.
+
 ## Install
 
 This project is an Ansible collection and be easily installed using the
@@ -119,6 +129,7 @@ The following create playbook will build an EC2 instance and all associate
 services to facilitate a streaming connection.
 
 ``` shell
+$ source ~/.ansible/digital-ocean.rc  # Source an environment file containing the DigitalOcean oAuth Token.
 $ ansible-playbook -i localhost, \
                    -e local_python_interpreter=$(which python) \
                    -e @private-vars/stream-vars.yaml \  # This is the file which contains the rtmpEndpoints array
@@ -131,6 +142,7 @@ $ ansible-playbook -i localhost, \
 ### Digital Ocean Delete
 
 ``` shell
+$ source ~/.ansible/digital-ocean.rc  # Source an environment file containing the DigitalOcean oAuth Token.
 $ ansible-playbook -i localhost, \
                    -e local_python_interpreter=$(which python) \
                    ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/droplet-delete.yaml

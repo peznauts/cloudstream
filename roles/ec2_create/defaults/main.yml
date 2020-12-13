@@ -21,6 +21,7 @@ ec2_igw_name: "{{ ec2_vpc_title }} IGW"
 ec2_subnet_name: "{{ ec2_vpc_title }} Subnet"
 ec2_keypair: rtmpServerKey
 ec2_instance_type: t2.micro
+ec2_instance_type_transcode: t2.medium
 ec2_image: ami-0885b1f6bd170450c
 ec2_region: us-east-1
 ec2_zone: us-east-1c

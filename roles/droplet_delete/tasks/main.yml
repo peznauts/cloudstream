@@ -21,13 +21,26 @@
   when:
     - local_python_interpreter is defined
 
-- name: Destroy rtmpServer droplet
+- name: Run a droplet by tag search
+  uri:
+    url: https://api.digitalocean.com/v2/droplets?tag_name=rtmpServer
+    method: GET
+    return_content: yes
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ lookup('env', 'DO_API_KEY') }}"
+  register: droplets_info
+
+- name: Destroy rtmpServer droplet(s)
   community.digitalocean.digital_ocean_droplet:
     state: absent
-    name: rtmpServer
+    id: "{{ item.id }}"
     unique_name: true
     size:  "{{ droplet_instance_type }}"
     region: "{{ droplet_region }}"
     image: "{{ droplet_image }}"
     wait_timeout: 600
-  register: my_droplet
+  loop: "{{ droplets_info.json.droplets }}"
+  loop_control:
+    label: "{{ item.name }}"

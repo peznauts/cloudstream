@@ -15,10 +15,11 @@
 
 ---
 
+- import_playbook: topology-create.yaml
+
 - name: Create an rtmpServer
-  hosts: localhost
+  hosts: topologyMap
   gather_facts: true
-  connection: local
   collections:
     - peznauts.cloudstream
     - amazon.aws

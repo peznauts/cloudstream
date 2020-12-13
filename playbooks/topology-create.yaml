@@ -15,8 +15,29 @@
 
 ---
 
-droplet_keypair: rtmpServerKey
-droplet_instance_type: s-1vcpu-1gb
-droplet_instance_type_transcode: s-2vcpu-2gb
-droplet_image: ubuntu-20-04-x64
-droplet_region: nyc1
+- name: Generate topology map
+  hosts: localhost
+  gather_facts: true
+  connection: local
+  tasks:
+    - name: Create main node
+      add_host:
+        hostname: main
+        ansible_host: "main"
+        ansible_connection: local
+        transcode: false
+        groups:
+        - topologyMap
+
+    - name: Create transcode node
+      add_host:
+        hostname: "{{ item.url | to_uuid }}"
+        ansible_host: "{{ item.url | to_uuid }}"
+        ansible_connection: local
+        transcode: true
+        groups:
+        - topologyMap
+        - transcodeTopologyMap
+      when:
+        - item.transcode is defined
+      loop: "{{ rtmpEndpoints | default([]) }}"

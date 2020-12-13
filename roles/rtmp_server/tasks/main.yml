@@ -47,28 +47,44 @@
           out_queue 4096;
           out_cork 8;
       {% for item in rtmpEndpoints %}
+      {%   if item.url is search('facebook') %}
+      {%     set rtmp_url = "rtmp://127.0.0.1:19350/rtmp/" ~ item.key %}
+      {%   else %}
+      {%     set rtmp_url = item.url | regex_replace('\\/$', '') ~ '/' ~ item.key %}
+      {%   endif %}
           application {{ loop.index }} {
                   live on;
                   record off;
                   meta copy;
-      {% if item.url is search('facebook') %}
-                  push rtmp://127.0.0.1:19350/rtmp/{{ item.key }};
-      {% else %}
-                  push {{ item.url | regex_replace('\\/$', '') }}/{{ item.key }};
-      {% endif %}
+      {%   if item.transcode is defined %}
+                  exec {{ rtmpServer_ffmpeg_settings[item.transcode] | peznauts.cloudstream.transcode(
+                            "rtmp://127.0.0.1:1935/" ~ loop.index,
+                            rtmp_url
+                          )
+                       }};
+      {%   else %}
+                  push {{ rtmp_url }};
+      {%   endif %}
           }
       {% endfor %}
           application simulcast {
                   live on;
                   record off;
                   meta copy;
+      {% set transcode_nodes = [] %}
+      {% for node in ansible_play_hosts %}
+      {%   if (hostvars[node]['rtmpserver_transcode'] | bool) %}
+      {%     set _ = transcode_nodes.append(node) %}
+      {%   endif %}
+      {% endfor %}
       {% for item in rtmpEndpoints %}
-      {%   if item.transcode is defined %}
-                  exec {{ (rtmpServer_ffmpeg_settings[item.transcode] | peznauts.cloudstream.transcode) }} "rtmp://127.0.0.1:1935/{{ loop.index }}";
+      {%   if (item.transcode is defined) and ((transcode_nodes | length) > 0) %}
+                  push rtmp://{{ hostvars[transcode_nodes.pop()]['rtmpserver_private_ip'] }}:1935/{{ loop.index }};
       {%   else %}
                   push rtmp://127.0.0.1:1935/{{ loop.index }};
       {%   endif %}
       {% endfor %}
+
           }
         }
       }

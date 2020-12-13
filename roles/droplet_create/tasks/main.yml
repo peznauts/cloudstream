@@ -20,6 +20,7 @@
     ansible_python_interpreter: "{{ local_python_interpreter }}"
   when:
     - local_python_interpreter is defined
+  run_once: true
 
 - name: "Create ssh key"
   community.digitalocean.digital_ocean_sshkey:
@@ -27,29 +28,41 @@
     ssh_pub_key: "{{ lookup('file', ansible_env.HOME ~ '/.ssh/id_rsa.pub') }}"
     state: present
   register: ssh_key
+  run_once: true
 
 - name: Create a new droplet
   community.digitalocean.digital_ocean_droplet:
     state: present
-    name: rtmpServer
+    name: "rtmpServer-{{ ansible_host }}"
     unique_name: true
-    size:  "{{ droplet_instance_type }}"
+    size:  "{{ (transcode | bool) | ternary(droplet_instance_type_transcode, droplet_instance_type) }}"
     region: "{{ droplet_region }}"
     image: "{{ droplet_image }}"
     wait_timeout: 600
+    private_networking: true
+    tags:
+    - "rtmpServer"
     ssh_keys:
     - "{{ ssh_key.data.ssh_key.id }}"
   register: my_droplet
 
+- name: Set droplet fact
+  set_fact:
+    droplet_facts: "{{ my_droplet }}"
+
 - name: Add instance to dynamic group
   add_host:
-    hostname: "{{ my_droplet.data.droplet.id }}"
-    ansible_host: "{{ my_droplet.data.ip_address }}"
+    hostname: "rtmpServer-{{ item }}"
+    ansible_host: "{{ hostvars[item]['droplet_facts']['data']['ip_address'] }}"
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
     ansible_user: root
     ansible_python_interpreter: /usr/bin/python3
+    rtmpserver_transcode: "{{ hostvars[item]['transcode'] | bool }}"
+    rtmpserver_public_ip: "{{ hostvars[item]['droplet_facts']['data']['ip_address'] }}"
+    rtmpserver_private_ip: "{{ hostvars[item]['droplet_facts']['data']['private_ipv4_address'] }}"
     groups:
     - streamerTarget
+  loop: "{{ ansible_play_hosts }}"
 
 - name: Wait for ssh to come up
   wait_for:

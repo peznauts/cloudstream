@@ -27,4 +27,5 @@
       debug:
         msg: >-
           This is the new stream URL:
-          rtmp://{{ hostvars[groups['streamerTarget'][0]]['ansible_host'] }}:1935/simulcast
+          rtmp://{{ hostvars['rtmpServer-main']['ansible_host'] }}:1935/simulcast
+      run_once: true

@@ -17,7 +17,7 @@
 
 RTMP_COMMAND = """
 /bin/ffmpeg
--i "rtmp://127.0.0.1:1935/simulcast"
+-i "{input}"
 -s {res}
 -r {fps}
 -c:v libx264
@@ -29,6 +29,7 @@ RTMP_COMMAND = """
 -c:a copy
 -b:a {audio}
 -f flv
+"{output}"
 """  #noqa
 
 
@@ -38,7 +39,7 @@ class FilterModule(object):
             'transcode': self.transcode,
         }
 
-    def transcode(self, transcode_setting):
+    def transcode(self, transcode_setting, input_target, output_target):
         """Return a transcode command line.
 
         :param transcode_setting: Dictionary
@@ -46,12 +47,14 @@ class FilterModule(object):
         """
 
         rtmp_command = RTMP_COMMAND.format(
+            input=input_target,
             res=transcode_setting['res'],
             fps=transcode_setting['fps'],
             preset=transcode_setting['preset'],
             keyinit=int(transcode_setting['fps']) * 2 // 1,
             bitrate=transcode_setting['bitrate'],
             keyframes=transcode_setting['key_frames'],
-            audio=transcode_setting['audio']
+            audio=transcode_setting['audio'],
+            output=output_target
         )
         return ' '.join(rtmp_command.splitlines()).strip()
