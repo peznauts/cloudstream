@@ -26,8 +26,8 @@ RTMP_COMMAND = """
 -x264-params "bitrate={bitrate}:vbv_maxrate={bitrate}:vbv_bufsize={bitrate}:threads=0:bframes={keyframes}:rc_lookahead=10:keyint={keyinit}:keyint_min={keyinit}:nal_hrd=cbr:scenecut=0:rc=cbr:force_cfr=1"
 -sws_flags lanczos
 -pix_fmt yuv420p
--c:a copy
--b:a {audio}
+-c:a {audio_codec}
+-b:a {audio_bitrate}
 -f flv
 "{output}"
 """  #noqa
@@ -54,7 +54,8 @@ class FilterModule(object):
             keyinit=int(transcode_setting['fps']) * 2 // 1,
             bitrate=transcode_setting['bitrate'],
             keyframes=transcode_setting['key_frames'],
-            audio=transcode_setting['audio'],
+            audio_codec=transcode_setting['audio_codec'],
+            audio_bitrate=transcode_setting['audio_bitrate'],
             output=output_target
         )
         return ' '.join(rtmp_command.splitlines()).strip()
