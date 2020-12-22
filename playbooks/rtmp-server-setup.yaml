@@ -22,6 +22,75 @@
     - peznauts.cloudstream
   roles:
     - role: nginx_rtmp_server
+  pre_tasks:
+    - name: Dump Inventory
+      run_once: true
+      connection: local
+      copy:
+        content: |-
+          {% set inv = {
+               "all": {
+                 "children": {
+                   "topologyMap": {
+                     "hosts": {}
+                   },
+                   "transcodeTopologyMap": {
+                     "hosts": {}
+                   },
+                   "streamerTarget": {
+                     "hosts": {}
+                   }
+                 }
+               }
+             }
+          %}
+          {% for item in groups['topologyMap'] %}
+          {%
+               set _ = inv['all']['children']['topologyMap']['hosts'].__setitem__(
+                 item,
+                 hostvars[item]
+               )
+          %}
+          {% endfor %}
+          {% for item in groups['streamerTarget'] | default([]) %}
+          {%
+               set _ = inv['all']['children']['streamerTarget']['hosts'].__setitem__(
+                 item,
+                 hostvars[item]
+               )
+          %}
+          {% endfor %}
+          {% for item in groups['transcodeTopologyMap'] | default([]) %}
+          {%
+               set _ = inv['all']['children']['transcodeTopologyMap']['hosts'].__setitem__(
+                 item,
+                 hostvars[item]
+               )
+          %}
+          {%   for key, values in hostvars[item]['groups'].items() %}
+          {%     for value_item in values %}
+          {%       if inv['all']['children'][key] is defined %}
+          {%
+                   set _ = inv['all']['children'][key]['hosts'].__setitem__(
+                     key,
+                     value_item
+                   )
+          %}
+          {%       else %}
+          {%
+                   set _ = inv['all']['children'].__setitem__(
+                     key,
+                     {
+                       "hosts": {value_item: {}}
+                     }
+                   )
+          %}
+          {%       endif %}
+          {%     endfor %}
+          {%   endfor %}
+          {% endfor %}
+          {{ inv | to_nice_yaml }}
+        dest: /tmp/local-inventory.yaml
   post_tasks:
     - name: Print Stream URL
       debug:

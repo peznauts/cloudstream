@@ -22,8 +22,8 @@ rtmpServer_ffmpeg_settings:
     audio_bitrate: 128k
     audio_codec: aac
     key_frames: 3
-    bitrate: 4000
-    preset: superfast
+    bitrate: 3872
+    preset: veryfast
     nodes: "{{ groups['transcodeTopologyMap720p30'] | default([]) | list }}"
   720p60:
     res: 1280x720
@@ -31,7 +31,7 @@ rtmpServer_ffmpeg_settings:
     audio_bitrate: 128k
     audio_codec: aac
     key_frames: 2
-    bitrate: 5000
+    bitrate: 4872
     preset: veryfast
     nodes: "{{ groups['transcodeTopologyMap720p60'] | default([]) | list }}"
   1080p48:
@@ -40,7 +40,7 @@ rtmpServer_ffmpeg_settings:
     audio_bitrate: 160k
     audio_codec: aac
     key_frames: 2
-    bitrate: 5500
+    bitrate: 5120
     preset: veryfast
     nodes: "{{ groups['transcodeTopologyMap1080p48'] | default([]) | list }}"
   1080p60:
@@ -49,6 +49,6 @@ rtmpServer_ffmpeg_settings:
     audio_bitrate: 160k
     audio_codec: aac
     key_frames: 2
-    bitrate: 6000
+    bitrate: 5840
     preset: veryfast
     nodes: "{{ groups['transcodeTopologyMap1080p60'] | default([]) | list }}"

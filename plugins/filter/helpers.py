@@ -63,7 +63,7 @@ class FilterModule(object):
         )
         return 'exec {}'.format(' '.join(rtmp_command.splitlines()).strip())
 
-    def stream_targets(self, rtmp_array, ffmpeg_settings, hostvars):
+    def stream_targets(self, rtmp_array, ffmpeg_settings, hostvars, nodes, node_self):
         """Process all stream targets and return a dictionary.
 
         :returns: dictionary of names and endpoints.
@@ -73,18 +73,19 @@ class FilterModule(object):
         transcoded_endpoints = list()
 
         return_items = defaultdict(list)
+        node_bitrate = defaultdict(int)
+        node_bitrate[node_self] += 0
+        for node in nodes:
+            node_bitrate[node] += 0
 
         for index, item in enumerate(rtmp_array, start=0):
-            return_items['simulcast'].append(
-                "push rtmp://127.0.0.1:1935/{}".format(index)
-            )
-
             url = item['url']
             key = item.get('key', '')
             if 'facebook' in url:
                 push_stream = "push rtmp://127.0.0.1:19350/rtmp/{}".format(key)
             else:
-                push_stream = "push rtmp://{}/{}".format(url, key)
+                push_stream = "push {}/{}".format(url, key)
+
             return_items[index].append(push_stream)
 
             if 'transcode' in item:
@@ -92,22 +93,23 @@ class FilterModule(object):
                 transcode_marker = '{}-transcode'.format(transcode_str)
                 settings = ffmpeg_settings[transcode_str]
                 try:
-                    node = ffmpeg_settings[transcode_str]['nodes'].pop()
-                    node = 'rtmpServer-{}'.format(node)
+                    node = 'rtmpServer-{}'.format(settings['nodes'].pop())
                 except IndexError:
-                    node = 'localhost'
+                    node = node_self
+
+                node_bitrate[node] += int(item.get('bitrate', 6144))
 
                 node_ip = hostvars.get(
-                    'rtmpServer-{}'.format(node),
+                    node,
                     dict()
                 ).get(
                     'rtmpserver_private_ip',
                     '127.0.0.1'
                 )
                 return_items['simulcast'].append(
-                    'exec /bin/ffmpeg -re -analyzeduration 0 -i'
-                    ' "rtmp://127.0.0.1:1935/simulcast live=1"'
-                    ' -f flv "rtmp://{}:1935/{}-transcode'.format(
+                    'exec /bin/ffmpeg -re -threads 1 -analyzeduration 0'
+                    ' -i "rtmp://127.0.0.1:1935/simulcast" -c:v copy -c:a copy'
+                    ' -f flv "rtmp://{}:1935/{}-transcode"'.format(
                         node_ip,
                         transcode_str
                     )
@@ -115,17 +117,30 @@ class FilterModule(object):
                 return_items[transcode_marker].append(
                     self.transcode(
                         transcode_setting=settings,
-                        input_target='rtmp://{}/{}-transcode'.format(
-                            node_ip,
+                        input_target='rtmp://127.0.0.1:1935/{}-transcode'.format(
                             transcode_str
                         ),
-                        output_target="rtmp://127.0.0.1:1935/{}-simulcast".format(
-                            transcode_str
+                        output_target="rtmp://127.0.0.1:1935/{}".format(
+                            index
                         )
                     )
                 )
-                return_items['{}-simulcast'.format(transcode_str)].append(
-                    "push rtmp://127.0.0.1:1935/{}".format(index)
+            else:
+                stream_node = min(node_bitrate, key=node_bitrate.get)
+                if stream_node == node_self:
+                    node_ip = '127.0.0.1'
+                else:
+                    node_ip = hostvars.get(
+                        stream_node,
+                        dict()
+                    ).get(
+                        'rtmpserver_private_ip',
+                        '127.0.0.1'
+                    )
+
+                return_items['simulcast'].append(
+                    "push rtmp://{}:1935/{}".format(node_ip, index)
                 )
+                node_bitrate[stream_node] += 6144
 
         return return_items
