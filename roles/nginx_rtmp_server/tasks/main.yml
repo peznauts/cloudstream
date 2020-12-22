@@ -46,78 +46,15 @@
           chunk_size 4096;
           out_queue 4096;
           out_cork 8;
-      {% set transcoded_targets = [] %}
-      {% for item in rtmpEndpoints %}
-      {%   if item.transcode is defined %}
-      {%     if not (item.transcode ~ '-transcode') in transcoded_targets %}
-      {%       set transcode_nodes = rtmpServer_ffmpeg_settings[item.transcode]['nodes'] %}
-      {%       set _ = transcoded_targets.append(item.transcode ~ '-transcode') %}
-          application {{ item.transcode }}-transcode {
+      {% for key, value in rtmpEndpoints | peznauts.cloudstream.stream_targets(rtmpServer_ffmpeg_settings, hostvars) %}
+          application {{ key }} {
                   live on;
                   record off;
                   meta copy;
-                  exec {{
-                          rtmpServer_ffmpeg_settings[item.transcode] | peznauts.cloudstream.transcode(
-                            'rtmp://' ~ hostvars['rtmpServer-' ~ transcode_nodes[0]]['rtmpserver_private_ip'] ~ '/' ~ item.transcode ~ '-transcode',
-                            "rtmp://127.0.0.1:1935/" ~ item.transcode ~ '-simulcast'
-                          )
-                       }};
-          }
-      {%     endif %}
-      {%   endif %}
-      {%   if item.url is search('facebook') %}
-      {%     set rtmp_url = "rtmp://127.0.0.1:19350/rtmp/" ~ item.key %}
-      {%   else %}
-      {%     set rtmp_url = item.url | regex_replace('\\/$', '') ~ '/' ~ item.key %}
-      {%   endif %}
-          application {{ loop.index }} {
-                  live on;
-                  record off;
-                  meta copy;
-                  push {{ rtmp_url }};
-          }
-      {% endfor %}
-      {% set transode_simulcasts = {} %}
-      {% for item in rtmpEndpoints %}
-      {%   if (item.transcode is defined) %}
-      {%     set _ = transode_simulcasts.__setitem__(item.transcode, []) %}
-      {%   endif %}
-      {% endfor %}
-      {% for item in rtmpEndpoints %}
-      {%   if (item.transcode is defined) %}
-      {%     set _ = transode_simulcasts[item.transcode].append(loop.index) %}
-      {%   endif %}
-      {% endfor %}
-      {% for key, value in transode_simulcasts.items() %}
-          application {{ key }}-simulcast {
-                  live on;
-                  record off;
-                  meta copy;
-      {%   for endpoint in value %}
-                  push rtmp://127.0.0.1:1935/{{ endpoint }};
+      {%   for item in value %}
+                  {{ item }}
       {%   endfor %}
           }
       {% endfor %}
-          application simulcast {
-                  live on;
-                  record off;
-                  meta copy;
-      {% set transcoded_endpoints = [] %}
-      {% for item in rtmpEndpoints %}
-      {%   if (item.transcode is defined) %}
-      {%     if not (item.transcode ~ '-transcode') in transcoded_endpoints %}
-      {%       set transcode_nodes = rtmpServer_ffmpeg_settings[item.transcode]['nodes'] %}
-      {%       if (transcode_nodes | length) > 0 %}
-                  exec /bin/ffmpeg -analyzeduration 0 -i "rtmp://127.0.0.1:1935/simulcast live=1" -f flv "rtmp://{{ hostvars['rtmpServer-' ~ transcode_nodes[0]]['rtmpserver_private_ip'] }}:1935/{{ item.transcode }}-transcode";
-      {%         set _ = transcoded_endpoints.append(item.transcode ~ '-transcode') %}
-      {%       else %}
-                  exec /bin/ffmpeg -analyzeduration 0 -i "rtmp://127.0.0.1:1935/simulcast live=1" -f flv "rtmp://127.0.0.1:1935/{{ item.transcode }}-transcode";
-      {%       endif %}
-      {%     endif %}
-      {%   else %}
-                  push rtmp://127.0.0.1:1935/{{ loop.index }};
-      {%   endif %}
-      {% endfor %}
-          }
         }
       }
