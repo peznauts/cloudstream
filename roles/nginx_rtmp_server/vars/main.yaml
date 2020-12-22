@@ -20,7 +20,7 @@ rtmpServer_ffmpeg_settings:
     res: 1280x720
     fps: 30
     audio_bitrate: 128k
-    audio_codec: acc
+    audio_codec: aac
     key_frames: 3
     bitrate: 4000
     preset: superfast
@@ -29,7 +29,7 @@ rtmpServer_ffmpeg_settings:
     res: 1280x720
     fps: 60
     audio_bitrate: 128k
-    audio_codec: acc
+    audio_codec: aac
     key_frames: 2
     bitrate: 5000
     preset: veryfast
@@ -38,7 +38,7 @@ rtmpServer_ffmpeg_settings:
     res: 1920x1080
     fps: 48
     audio_bitrate: 160k
-    audio_codec: acc
+    audio_codec: aac
     key_frames: 2
     bitrate: 5500
     preset: veryfast
@@ -47,7 +47,7 @@ rtmpServer_ffmpeg_settings:
     res: 1920x1080
     fps: 60
     audio_bitrate: 160k
-    audio_codec: acc
+    audio_codec: aac
     key_frames: 2
     bitrate: 6000
     preset: veryfast

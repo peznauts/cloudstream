@@ -32,3 +32,5 @@
     - name: Create transcode node
       include_tasks: tasks/topology-transcode-create.yaml
       loop: "{{ rtmpEndpoints | default([]) }}"
+      when:
+        - cloudstream_scale_horizontally | default(true) | bool
