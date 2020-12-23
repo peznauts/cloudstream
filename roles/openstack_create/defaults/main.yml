@@ -1,0 +1,26 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+openstack_keypair: rtmpServerKey
+openstack_net_title: 'Stream network'
+openstack_subnet_name: "{{ ec2_vpc_title }} Subnet"
+openstack_dns_nameservers:
+  - 208.67.222.222
+  - 208.67.220.220
+openstack_subNetCidrBlock: '10.0.1.0/24'
+openstack_allowPortCidrBlock: '0.0.0.0/0'
+openstack_instance_access_user: ubuntu

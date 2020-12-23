@@ -1,0 +1,50 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+- name: Set python interpreter fact
+  set_fact:
+    ansible_python_interpreter: "{{ local_python_interpreter | default('/usr/bin/python3') }}"
+  when:
+    - local_python_interpreter is defined
+
+- name: Check for required options
+  fail:
+    msg: >-
+      The required user option "{{ item }}" was undefined. Check your config and try again.
+  run_once: true
+  when:
+    - item is undefined
+  loop:
+    - openstack_cloud_name
+
+- name: List openstack servers
+  openstack.cloud.server_info:
+    cloud: "{{ openstack_cloud_name }}"
+    server: rtmpServer-*
+    filters:
+      vm_state: active
+  register: result
+
+- name: Destroy a instance
+  openstack.cloud.server:
+    cloud: "{{ openstack_cloud_name }}"
+    state: absent
+    name: "{{ item.id }}"
+    timeout: 600
+  loop: "{{ result.openstack_servers }}"
+  loop_control:
+    label: "{{ item.name }}"

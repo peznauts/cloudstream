@@ -1,15 +1,15 @@
 # CloudStream
 
 Tools for setting up a simulcast broadcast using public cloud resources. This
-project will support simulcasting streams (multi-streaming) to services like
-Perascope, Facebook, Twitch, YouTube, and more.
+project will support simulcasting streams to services like Perascope, Facebook,
+Twitch, YouTube, and more.
 
 ## Transcoding
 
 CloudStream will detect your configuration and adapt the cloud environment to
 meet the needs of your broadcast by splitting off transcoding nodes from the
 main relay node. CloudStream allows you to scale your broadcast horizontally
-whenever required, which has the added benefit of fencing. By scaling
+whenever required, which has the added benefit of fencing. By scalling
 horizontally, and fencing your broadcast, you'll never need to worry about
 one stream negatively impacting another, especially when transcoding is
 required.
@@ -56,8 +56,6 @@ rtmpEndpoints:
   transcode: 720p30
 ```
 
-> At this time Cloud Stream requires Ubuntu 20.04 as a base image.
-
 ### Extra configuration
 
 Most cloud providers require some additional setup to interact within their
@@ -90,51 +88,13 @@ authentication.
 export DO_API_KEY=XXXyyyZZZ
 ```
 
-#### OpenStack
-
-Deployment of CloudStream on OpenStack assumes an appropriate `clouds.yaml`
-configuration has been created on the local system. For information on setting
-up a `clouds.yaml` file, please review the following
-[documentation](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#configuration-files).
-
-> Because an OpenStack cloud is "open" by design there are no guaranteed
-  resources, images, or networks provided for you within the environment.
-  You will need to define specific resource variables to power your
-  deployment. The required options are listed within this section.
-
-* The user defined option, `openstack_provider_network` must be defined within
-  your `stream-vars.yaml` file. This defines the network used to connect a router
-  to the internet. This network is also used to attach floating IP addresses to
-  relay nodes.
-
-* The user defined option, `openstack_cloud_name` must be defined within your
-  `stream-vars.yaml` file. This setting corresponds to the clouds defined within
-  the `clouds.yaml` configuration and will route the CloudStream deployment to
-  the appropriate cloud environment.
-
-* The user defined option, `openstack_instance_type` must be defined within your
-  `stream-vars.yaml` file. This setting sets the instance **flavor** when
-  creating stream relay nodes.
-
-* The user defined option, `openstack_instance_type_transcode` must be defined
-  within your `stream-vars.yaml` file. This setting sets the instance **flavor**
-  when creating stream transcode nodes.
-
-* The user defined option, `openstack_image` must be defined within your
-  `stream-vars.yaml` file. This defines the image name used to create instances
-  within the cloud. Note this setting can be either the image "name" or "id".
-  This image is assumed to be Ubuntu 20.04 at this time. If your image is
-  configured with cloudinit, the default access user should work, however, this
-  value can be customized by setting the `openstack_instance_access_user`
-  accordingly.
-
 ## Usage
 
 This section covers general use cases executing the included playbook from
 this collection.
 
 > NOTE: The `local_python_interpreter` extra variable is only required when
-  running ansible from within a virtual environment.
+running ansible from within a virtual environment.
 
 At the end of the create playbook execution the RTMP URL used in your
 broadcasting software will be presented as debug output. This is the URL
@@ -163,7 +123,7 @@ $ ansible-playbook -i localhost, \
                    ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/ec2-delete.yaml
 ```
 
-### Digital Ocean Create Usage
+### Digital Ocean Usage
 
 The following create playbook will build an EC2 instance and all associate
 services to facilitate a streaming connection.
@@ -186,32 +146,4 @@ $ source ~/.ansible/digital-ocean.rc  # Source an environment file containing th
 $ ansible-playbook -i localhost, \
                    -e local_python_interpreter=$(which python) \
                    ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/droplet-delete.yaml
-```
-
-### OpenStack Create Usage
-
-The following create playbook will build an OpenStack instance and all associate
-services to facilitate a streaming connection.
-
-``` shell
-$ ansible-playbook -i localhost, \
-                   -e local_python_interpreter=$(which python) \
-                   -e @private-vars/stream-vars.yaml \  # This is the file which contains the rtmpEndpoints array
-                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/openstack-create.yaml
-```
-
-> Within the OpenStack environment only one "floating" IP address is used which
-  allows the playbooks to access the cluster through the "main" node, using it as
-  a jump box. This ensures we're conserving resources and building a robust,
-  secure stream environment.
-
-### OpenStack Delete Usage
-
-The following delete playbook will destroy an OpenStack instance and all associate
-services for streaming.
-
-``` shell
-$ ansible-playbook -i localhost, \
-                   -e local_python_interpreter=$(which python) \
-                   ~/.ansible/collections/ansible_collections/peznauts/cloudstream/playbooks/openstack-delete.yaml
 ```

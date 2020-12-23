@@ -8,7 +8,7 @@ namespace: peznauts
 name: cloudstream
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.2.0
+version: 0.3.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -42,7 +42,8 @@ tags: []
 dependencies: {
   amazon.aws: ">=1.2.1",
   community.aws: ">=1.2.1",
-  community.digitalocean: ">=1.0.0"
+  community.digitalocean: ">=1.0.0",
+  openstack.cloud: ">=1.2.0"
 }
 
 # The URL of the originating SCM repository

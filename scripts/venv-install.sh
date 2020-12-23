@@ -22,5 +22,5 @@ set -v
 python3 -m venv ~/ansible-venv
 
 ~/ansible-venv/bin/pip install wheel pip --force --upgrade
-~/ansible-venv/bin/pip install ansible boto boto3
+~/ansible-venv/bin/pip install ansible boto boto3 openstacksdk
 ~/ansible-venv/bin/ansible-galaxy collection install git+https://github.com/peznauts/cloudstream.git

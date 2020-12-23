@@ -1,0 +1,177 @@
+# CloudStream Copyright (C) 2020  Kevin Carter
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+- name: Set python interpreter fact
+  set_fact:
+    ansible_python_interpreter: "{{ local_python_interpreter }}"
+  when:
+    - local_python_interpreter is defined
+  run_once: true
+
+- name: Check for required options
+  fail:
+    msg: >-
+      The required user option "{{ item }}" was undefined. Check your config and try again.
+  run_once: true
+  when:
+    - item is undefined
+  loop:
+    - openstack_provider_network
+    - openstack_instance_type
+    - openstack_instance_type_transcode
+    - openstack_image
+    - openstack_cloud_name
+
+- name: "Create ssh key"
+  openstack.cloud.keypair:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    name: "{{ openstack_keypair }}"
+    public_key: "{{ lookup('file', ansible_env.HOME ~ '/.ssh/id_rsa.pub') }}"
+  register: ssh_key
+  run_once: true
+
+- name: Create a stream network
+  openstack.cloud.network:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    name: "{{ openstack_net_title }}"
+    external: true
+  register: streamnet
+  run_once: true
+
+- name: Create a subnet
+  openstack.cloud.subnet:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    network_name: "{{ openstack_net_title }}"
+    name: "{{ openstack_net_title }} sub-network"
+    cidr: "{{ openstack_subNetCidrBlock }}"
+    dns_nameservers: "{{ openstack_dns_nameservers }}"
+  run_once: true
+
+- name: Create a router
+  openstack.cloud.router:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    name: "{{ openstack_net_title }} router"
+    network: "{{ openstack_provider_network }}"
+    interfaces:
+      - "{{ openstack_net_title }} sub-network"
+  run_once: true
+
+- name: Create a security group
+  openstack.cloud.security_group:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    name: "{{ openstack_net_title }} security group"
+    description: Security group used for streaming
+  run_once: true
+
+- name: Create a security group rules
+  openstack.cloud.security_group_rule:
+    cloud: "{{ openstack_cloud_name }}"
+    security_group: "{{ openstack_net_title }} security group"
+    protocol: "{{ item.proto }}"
+    port_range_min: "{{ item.port_range_min }}"
+    port_range_max: "{{ item.port_range_max }}"
+    remote_ip_prefix: "{{ item.remote_ip_prefix }}"
+  run_once: true
+  loop:
+    - proto: tcp
+      port_range_min: 22
+      port_range_max: 22
+      remote_ip_prefix: "{{ openstack_allowPortCidrBlock }}"
+    - proto: tcp
+      port_range_min: 1935
+      port_range_max: 1935
+      remote_ip_prefix: "{{ openstack_allowPortCidrBlock }}"
+
+- name: Create a instance
+  openstack.cloud.server:
+    cloud: "{{ openstack_cloud_name }}"
+    state: present
+    name: "rtmpServer-{{ ansible_host }}"
+    image: "{{ openstack_image }}"
+    key_name: "{{ openstack_keypair }}"
+    timeout: 600
+    flavor: "{{ (transcode | default(false) | bool) | ternary(openstack_instance_type_transcode, openstack_instance_type) }}"
+    floating_ip_pools: "{{ (transcode | default(false) | bool) | ternary(omit, openstack_provider_network) }}"
+    security_groups:
+      - "{{ openstack_net_title }} security group"
+    nics:
+      - net-id: "{{ streamnet.network.id }}"
+  register: my_instance
+
+- name: Set openstack facts
+  set_fact:
+    rtmpserver_public_ip: "{{
+      (
+        my_instance['openstack']['addresses']['Stream network'] |
+        selectattr('OS-EXT-IPS:type', 'equalto', 'floating') |
+        map(attribute='addr') |
+        list
+      )[0] |
+      default('127.0.0.1')
+    }}"
+    rtmpserver_private_ip: "{{
+      (
+        my_instance['openstack']['addresses']['Stream network'] |
+        selectattr('OS-EXT-IPS:type', 'equalto', 'fixed') |
+        map(attribute='addr') |
+        list
+      )[0]
+    }}"
+
+- name: Add instance to dynamic group
+  add_host:
+    hostname: "rtmpServer-{{ item }}"
+    ansible_host: "{{ hostvars[item]['rtmpserver_public_ip'] }}"
+    ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+    ansible_user: "{{ openstack_instance_access_user }}"
+    ansible_python_interpreter: /usr/bin/python3
+    rtmpserver_public_ip: "{{ hostvars[item]['rtmpserver_public_ip'] }}"
+    rtmpserver_private_ip: "{{ hostvars[item]['rtmpserver_private_ip'] }}"
+    groups:
+    - streamerTarget
+  when:
+    - transcode | default(false) | bool
+  loop: "{{ ansible_play_hosts }}"
+
+- name: Add instance to dynamic group
+  add_host:
+    hostname: "rtmpServer-{{ item }}"
+    ansible_host: "{{ hostvars[item]['rtmpserver_private_ip'] }}"
+    ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+    ansible_user: "{{ openstack_instance_access_user }}"
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_common_args: >-
+      -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p {{ openstack_instance_access_user }}@{{ hostvars['main']['rtmpserver_public_ip'] }}"
+    rtmpserver_public_ip: "{{ hostvars[item]['rtmpserver_public_ip'] }}"
+    rtmpserver_private_ip: "{{ hostvars[item]['rtmpserver_private_ip'] }}"
+    groups:
+    - streamerTarget
+  when:
+    - not (transcode | default(false) | bool)
+  loop: "{{ ansible_play_hosts }}"
+
+- name: Wait for ssh to come up
+  wait_for:
+    host: "{{ rtmpserver_public_ip }}"
+    port: 22
+    delay: 10
+    timeout: 300
