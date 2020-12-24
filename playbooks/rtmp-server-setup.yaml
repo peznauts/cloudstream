@@ -92,9 +92,40 @@
           {{ inv | to_nice_yaml }}
         dest: /tmp/local-inventory.yaml
   post_tasks:
+    - name: Get stats of the FS object
+      ansible.builtin.stat:
+        path: Untitled/service.json
+      register: service_json
+
+    - name: Service block
+      when:
+        - service_json.stat.exists | bool
+      block:
+        - name: Create service json for custom RTMP Stream
+          copy:
+            content: |-
+              {
+                  "settings": {
+                      "bwtest": false,
+                      "key": "",
+                      "server": "rtmp://{{ hostvars['rtmpServer-main']['ansible_host'] }}:1935/simulcast",
+                      "use_auth": false
+                  },
+                  "type": "rtmp_custom"
+              }
+            dest: Untitled/service.json
+        - name: Notice
+          debug:
+            msg: >-
+              OBS has been configured with the new stream RTMP setup.
+              If OBS is running please restart it now.
+              The changes will go into effect on the next restart.
     - name: Print Stream URL
       debug:
         msg: >-
           This is the new stream URL:
           rtmp://{{ hostvars['rtmpServer-main']['ansible_host'] }}:1935/simulcast
+          To use this URL you must setup a custom stream type.
       run_once: true
+      when:
+        - not (service_json.stat.exists | bool)
